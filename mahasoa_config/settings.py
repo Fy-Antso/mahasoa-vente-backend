@@ -1,14 +1,19 @@
 from pathlib import Path
+import os
 import sys
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement
+load_dotenv()
 
 # ==============================================================================
 # CONFIGURATION GÉNÉRALE DU PROJET
 # ==============================================================================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-votre-cle-secrete-ici'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-votre-cle-secrete-ici')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['*']
 
@@ -60,18 +65,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mahasoa_config.wsgi.application'
 
+# ==============================================================================
+# BASE DE DONNÉES (CLEVER CLOUD / LOCAL XAMPP)
+# ==============================================================================
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'mahasoa_vente_db',
         'USER': 'root',
-        'PASSWORD': '',  # Mot de passe vide par défaut sous XAMPP
+        'PASSWORD': '',
         'HOST': '127.0.0.1',
         'PORT': '3306',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            'charset': 'utf8mb4',
-        },
     }
 }
 
