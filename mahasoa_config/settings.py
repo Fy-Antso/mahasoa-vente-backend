@@ -66,16 +66,16 @@ TEMPLATES = [
 WSGI_APPLICATION = 'mahasoa_config.wsgi.application'
 
 # ==============================================================================
-# BASE DE DONNÉES (CLEVER CLOUD / LOCAL XAMPP)
+# BASE DE DONNÉES (POSTGRESQL - RENDER / LOCAL)
 # ==============================================================================
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mahasoa_vente_db',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'mahasoa_db'),
+        'USER': os.getenv('DB_USER', 'mahasoa_user'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
