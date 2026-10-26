@@ -1,3 +1,5 @@
+from django.contrib.auth.hashers import check_password, make_password, identify_hasher
+from django.utils.crypto import constant_time_compare
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
@@ -58,45 +60,48 @@ def alertes_stock_critique(request):
 
 
 @api_view(['POST'])
-def login_view(request):
-    """Gère la connexion pour l'Administrateur et le Magasinier par Nom d'utilisateur ou Email"""
-    # Récupère 'username' ou 'email' depuis la requête React
-    identifier = request.data.get('username') or request.data.get('email')
-    password = request.data.get('password')
-
-    if not identifier or not password:
-        return Response({'error': 'Veuillez fournir un nom d\'utilisateur/email et un mot de passe.'}, status=status.HTTP_400_BAD_REQUEST)
-
+def _est_hache(valeur):
     try:
-        # Recherche l'utilisateur soit par son nom (ex: fyantso) soit par son email
-        user = Utilisateur.objects.get(Q(nom=identifier) | Q(email=identifier))
-        
-        if user.password == password:  
+        identify_hasher(valeur)
+        return True
+    except ValueError:
+        return False
+
+
+def _verifier_mot_de_passe(utilisateur, saisi):
+    stocke = utilisateur.password or ''
+    if _est_hache(stocke):
+        return check_password(saisi, stocke)
+    # Ancien mot de passe en clair : on le vérifie, puis on le hache pour la suite
+    if constant_time_compare(stocke, saisi):
+        utilisateur.password = make_password(saisi)
+        utilisateur.save(update_fields=['password'])
+        return True
+    return False
+
+
+@api_view(['POST'])
+def login_view(request):
+    """Connexion par nom ou email (casse ignorée)."""
+    identifiant = (request.data.get('username') or request.data.get('email') or '').strip()
+    password = request.data.get('password') or ''
+
+    if not identifiant or not password:
+        return Response({'error': "Veuillez fournir un identifiant et un mot de passe."},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    candidats = Utilisateur.objects.filter(Q(nom__iexact=identifiant) | Q(email__iexact=identifiant))
+    for user in candidats:
+        if _verifier_mot_de_passe(user, password):
             return Response({
                 'message': 'Connexion réussie',
                 'user': {
                     'id': user.id_utilisateur,
                     'nom': user.nom,
                     'email': user.email,
-                    'role': user.role
-                }
+                    'role': user.role,
+                },
             }, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'Mot de passe incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
-            
-    except Utilisateur.DoesNotExist:
-        return Response({'error': 'Utilisateur introuvable.'}, status=status.HTTP_404_NOT_FOUND)
-    except Utilisateur.MultipleObjectsReturned:
-        # Sécurité au cas où deux utilisateurs auraient le même nom
-        user = Utilisateur.objects.filter(Q(nom=identifier) | Q(email=identifier)).first()
-        if user and user.password == password:
-            return Response({
-                'message': 'Connexion réussie',
-                'user': {
-                    'id': user.id_utilisateur,
-                    'nom': user.nom,
-                    'email': user.email,
-                    'role': user.role
-                }
-            }, status=status.HTTP_200_OK)
-        return Response({'error': 'Identifiants incorrects.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Message unique : ne révèle pas si le compte existe
+    return Response({'error': 'Identifiants incorrects.'}, status=status.HTTP_401_UNAUTHORIZED)
