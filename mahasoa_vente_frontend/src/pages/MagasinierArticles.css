@@ -1,0 +1,208 @@
+/* ==========================================================================
+   STYLE PAGE GESTION DES ARTICLES MAGASINIER - MAHASOA VENTE
+   ========================================================================== */
+
+/* Défilement et conteneur principal */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto; /* Autorise le défilement vertical pour afficher le tableau en bas */
+}
+
+.dashboard-view {
+  padding: 2rem;
+  flex: 1;
+}
+
+/* Carte Formulaire */
+.custom-card-form {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #E5E8E5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  margin-bottom: 2rem;
+}
+
+.form-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.form-group-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group-custom label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #063C2F;
+}
+
+.form-control-custom {
+  padding: 10px 14px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #1A2B27;
+  outline: none;
+  background-color: #FAFAFA;
+  transition: border-color 0.2s ease;
+}
+
+.form-control-custom:focus {
+  border-color: #0B5D4A;
+  background-color: #FFFFFF;
+}
+
+.btn-save-article {
+  background-color: #063C2F;
+  color: #FFFFFF;
+  border: none;
+  padding: 11px 24px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-save-article:hover {
+  background-color: #0B5D4A;
+}
+
+/* Carte Tableau - Forçage de visibilité */
+.custom-card-table {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #E5E8E5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  margin-top: 1.5rem;
+  margin-bottom: 3rem;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 250px;
+}
+
+.table-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.table-title {
+  color: #063C2F;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.table-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 0.85rem;
+  color: #6B7A75;
+}
+
+.search-box input {
+  padding: 8px 12px 8px 32px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  outline: none;
+  width: 240px;
+  background-color: #FFFFFF;
+  color: #1A2B27;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.92rem;
+}
+
+.styled-table thead tr {
+  background-color: #063C2F;
+  color: #FFFFFF;
+}
+
+.styled-table th {
+  padding: 12px 16px;
+  font-weight: 600;
+}
+
+.styled-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #E5E8E5;
+  color: #1A2B27;
+}
+
+.styled-table tbody tr:hover {
+  background-color: #F7F6F1;
+}
+
+.category-badge {
+  background-color: #FAF5E6;
+  color: #C9A227;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+}
+
+.btn-delete-action {
+  background-color: #d9534f;
+  color: #FFFFFF;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-delete-action:hover {
+  background-color: #c9302c;
+}
+
+.empty-row {
+  text-align: center;
+  padding: 2rem;
+  color: #6B7A75;
+}
+
+.table-footer-info {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #6B7A75;
+}
