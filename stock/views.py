@@ -7,12 +7,13 @@ from rest_framework.response import Response
 from django.db.models import F, Q
 from .models import Categorie, Fournisseur, Article, Utilisateur, Mouvement
 from .serializers import (
-    CategorieSerializer, 
-    FournisseurSerializer, 
-    ArticleSerializer, 
-    UtilisateurSerializer, 
+    CategorieSerializer,
+    FournisseurSerializer,
+    ArticleSerializer,
+    UtilisateurSerializer,
     MouvementSerializer
 )
+
 
 class CategorieViewSet(viewsets.ModelViewSet):
     queryset = Categorie.objects.all()
@@ -41,13 +42,13 @@ class MouvementViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         mouvement = serializer.save()
         article = mouvement.id_article
-        
+
         # Mise à jour automatique du stock selon le mouvement
         if mouvement.type.lower() == 'entree':
             article.quantite += mouvement.quantite
         elif mouvement.type.lower() == 'sortie':
             article.quantite -= mouvement.quantite
-            
+
         article.save()
 
 
@@ -59,7 +60,6 @@ def alertes_stock_critique(request):
     return Response(serializer.data)
 
 
-@api_view(['POST'])
 def _est_hache(valeur):
     try:
         identify_hasher(valeur)
