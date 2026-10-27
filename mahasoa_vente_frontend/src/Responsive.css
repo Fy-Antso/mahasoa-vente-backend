@@ -182,13 +182,13 @@
     max-width: 85vw;
     height: auto !important;
     min-height: 0 !important;
-    transform: translateX(-100%);
+    transform: translateX(-100%) !important;
     transition: transform 0.3s ease;
     z-index: 1000;
     overflow-y: auto;
   }
   .dashboard-layout .sidebar.open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
     box-shadow: 8px 0 30px rgba(0,0,0,0.3);
   }
   .dashboard-layout .sidebar-overlay {
@@ -202,5 +202,5 @@
     font-size: 1.1rem; cursor: pointer;
   }
   .dashboard-layout .btn-icon-menu { display: flex; }
-  .dashboard-layout .main-wrapper { width: 100%; }
+  .dashboard-layout .main-wrapper { width: 100%; min-width: 0; }
 }
