@@ -14,8 +14,7 @@ import MagasinierArticlesPage from './pages/MagasinierArticlesPage';
 import MagasinierMouvementsPage from './pages/MagasinierMouvementsPage';
 import MagasinierFournisseursPage from './pages/MagasinierFournisseursPage';
 
-import './Responsive.css'; // toujours en dernier : il doit l'emporter sur les CSS des pages
-
+import './Responsive.css'; 
 function lireRole() {
   try {
     const user = JSON.parse(localStorage.getItem('user'));
