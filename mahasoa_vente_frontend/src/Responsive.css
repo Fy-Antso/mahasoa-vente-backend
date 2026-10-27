@@ -1,11 +1,16 @@
-/* ===== Pages de gestion (Articles, Catégories, Fournisseurs) ===== */
+/* ==========================================================================
+   PAGES D'ADMINISTRATION (Articles, Catégories, Fournisseurs, Mouvements, Utilisateurs)
+   ========================================================================== */
 .custom-card { min-width: 0; }
 .table-responsive-custom { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .custom-table { min-width: 480px; }
 .articles-container .custom-table { min-width: 640px; }
+.mouvements-container .custom-table { min-width: 560px; }
+.action-buttons { flex-wrap: wrap; }
 
 @media (max-width: 991px) {
-  .articles-container, .categories-container, .fournisseurs-container { padding: 0.75rem 1rem; }
+  .articles-container, .categories-container, .fournisseurs-container,
+  .mouvements-container, .utilisateurs-container { padding: 0.75rem 1rem; }
 }
 
 @media (max-width: 768px) {
@@ -13,54 +18,152 @@
 }
 
 @media (max-width: 600px) {
-  .articles-container, .categories-container, .fournisseurs-container { padding: 0.75rem; }
+  .articles-container, .categories-container, .fournisseurs-container,
+  .mouvements-container, .utilisateurs-container { padding: 0.75rem; }
   .page-title-section h1 { font-size: 1.2rem; }
 
-  /* Formulaires : un champ par ligne */
-  .form-grid, .form-grid-fournisseurs { grid-template-columns: 1fr; }
+  .form-grid, .form-grid-fournisseurs, .form-grid-mouvements, .form-grid-utilisateurs {
+    grid-template-columns: 1fr;
+  }
   .form-inline-custom { flex-direction: column; align-items: stretch; }
-  .form-control-custom { min-height: 44px; font-size: 16px; }
+  .form-control-custom { min-height: 44px; }
 
-  /* Boutons pleine largeur, cibles tactiles confortables */
   .btn-submit { width: 100%; height: auto; min-height: 44px; }
   .form-actions { flex-direction: column; align-items: stretch; gap: 0.5rem; }
   .form-actions button { width: 100%; margin-left: 0 !important; }
   .btn-back { min-height: 40px; }
   .btn-edit, .btn-delete { padding: 0.4rem 0.7rem; min-height: 36px; }
 
-  /* Tableaux plus compacts */
   .custom-table th, .custom-table td { padding: 0.5rem 0.6rem; }
 }
-/* ===== Espace magasinier (provisoire) ===== */
+
+/* ==========================================================================
+   ESPACE MAGASINIER
+   ========================================================================== */
+.magasinier-layout { width: 100%; }
+
+/* La page défile normalement (les CSS d'origine imposaient height:100vh) */
+.magasinier-layout .main-content {
+  flex: 1;
+  min-width: 0;
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-y: visible;
+  overflow-x: hidden;
+}
+
+.magasinier-layout .sidebar {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow-y: auto;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.magasinier-layout .navbar-top { position: sticky; top: 0; z-index: 900; }
+
+/* Éléments du tiroir : cachés sur grand écran */
 .magasinier-layout .sidebar-overlay,
 .magasinier-layout .sidebar-close,
 .magasinier-layout .btn-icon-menu { display: none; }
 
-.magasinier-layout .main-content { min-width: 0; }
+/* Formulaires : même aspect quelle que soit la page */
+.magasinier-layout .form-articles { padding: 1.5rem; overflow: visible; }
+.magasinier-layout .form-avec-entete { padding: 0; overflow: hidden; }
+.magasinier-layout .form-grid-4,
+.magasinier-layout .form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 1.25rem;
+}
+.magasinier-layout .form-grid-3 { padding: 1.5rem; }
+.magasinier-layout .form-actions-bar { display: flex; justify-content: flex-end; }
+.magasinier-layout .form-articles .form-actions-bar { margin-top: 1.25rem; }
+.magasinier-layout .form-avec-entete .form-actions-bar { padding: 0 1.5rem 1.5rem; }
+.magasinier-layout .btn-save-mouvement,
+.magasinier-layout .btn-save-fournisseur,
+.magasinier-layout .btn-save-article { margin: 0; }
+
+/* Classes qui remplacent les anciens styles en ligne */
+.magasinier-layout .col-centre { text-align: center; }
+.magasinier-layout .cell-gras { font-weight: 600; }
+.magasinier-layout .cell-vert { color: #063C2F; }
+.magasinier-layout .cell-vert-clair { color: #0B5D4A; font-weight: 700; }
+.magasinier-layout .cell-rouge { color: #d9534f; font-weight: 700; }
+.magasinier-layout .kpi-value-alerte { color: #C9A227; }
+
 .magasinier-layout .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.magasinier-layout .action-cards-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.magasinier-layout .action-cards-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+.magasinier-layout .kpi-card { min-width: 0; }
+.magasinier-layout .styled-table { min-width: 620px; }
 
 @media (max-width: 1100px) {
   .magasinier-layout .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+/* Tablette et mobile : sidebar en tiroir */
 @media (max-width: 991px) {
   .magasinier-layout .sidebar {
-    position: fixed; top: 0; left: 0; bottom: 0; height: auto;
-    width: 270px; min-width: 0; max-width: 85vw;
-    transform: translateX(-100%); transition: transform 0.3s ease; z-index: 1000;
-    overflow-y: auto;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    height: auto; width: 270px; min-width: 0; max-width: 85vw;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
   }
-  .magasinier-layout .sidebar.open { transform: translateX(0); }
-  .magasinier-layout .sidebar-overlay { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+  .magasinier-layout .sidebar.open { transform: translateX(0); box-shadow: 8px 0 30px rgba(0,0,0,0.3); }
+
+  .magasinier-layout .sidebar-overlay {
+    display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999;
+  }
   .magasinier-layout .sidebar-close {
     display: flex; align-self: flex-end; align-items: center; justify-content: center;
-    width: 36px; height: 36px; background: rgba(255,255,255,0.1); color: #fff;
-    border: none; border-radius: 50%; cursor: pointer;
+    width: 36px; height: 36px; margin: 0 0 0.5rem auto;
+    background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 50%;
+    font-size: 1.1rem; cursor: pointer;
   }
-  .magasinier-layout .btn-icon-menu { display: flex; background: none; border: none; font-size: 1.4rem; cursor: pointer; margin-right: auto; }
+  .magasinier-layout .btn-icon-menu {
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; padding: 0;
+    background: none; border: none; font-size: 1.5rem; color: #063C2F; cursor: pointer;
+  }
+
+  .magasinier-layout .navbar-top { height: 60px; padding: 0 1rem; justify-content: space-between; }
+  .magasinier-layout .dashboard-view { padding: 1.25rem 1rem; }
 }
 
-@media (max-width: 480px) {
-  .magasinier-layout .kpi-grid { grid-template-columns: 1fr; }
+/* Mobile */
+@media (max-width: 600px) {
+  .magasinier-layout .dashboard-view { padding: 0.9rem 0.75rem; }
+  .magasinier-layout .user-details { display: none; }
+
+  .magasinier-layout .page-header { gap: 12px; margin-bottom: 1.25rem; }
+  .magasinier-layout .header-icon-box { width: 42px; height: 42px; font-size: 1.3rem; flex-shrink: 0; }
+  .magasinier-layout .header-title-group h1 { font-size: 1.2rem; }
+  .magasinier-layout .header-title-group p { font-size: 0.82rem; }
+
+  .magasinier-layout .kpi-grid { grid-template-columns: 1fr; gap: 0.9rem; margin-bottom: 1.25rem; }
+  .magasinier-layout .operations-section { padding: 1rem; }
+  .magasinier-layout .action-card { padding: 1rem; }
+
+  .magasinier-layout .form-articles { padding: 1rem; }
+  .magasinier-layout .form-grid-3 { padding: 1rem; }
+  .magasinier-layout .form-avec-entete .form-actions-bar { padding: 0 1rem 1rem; }
+  .magasinier-layout .form-actions-bar { flex-direction: column; }
+  .magasinier-layout .form-actions-bar button { width: 100%; min-height: 46px; }
+  .magasinier-layout .form-control-custom { min-height: 44px; }
+
+  .magasinier-layout .custom-card-table { padding: 1rem; margin-bottom: 1.5rem; min-height: 0; }
+  .magasinier-layout .table-title { font-size: 1.05rem; }
+  .magasinier-layout .table-filter-group,
+  .magasinier-layout .search-box { width: 100%; }
+  .magasinier-layout .search-box input { width: 100%; min-height: 44px; }
+  .magasinier-layout .styled-table th,
+  .magasinier-layout .styled-table td { padding: 10px 12px; }
+  .magasinier-layout .btn-delete-action { min-height: 36px; white-space: nowrap; }
+
+  .modal-container { padding: 1.4rem 1.1rem; }
 }

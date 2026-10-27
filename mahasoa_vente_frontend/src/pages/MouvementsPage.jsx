@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import './Mouvements.css';
 
+// Accepte 'Entree', 'ENTREE', 'entrée'...
+const estEntree = (t) => String(t || '').toLowerCase().startsWith('entr');
+
+const aujourdhui = () => new Date().toISOString().split('T')[0];
+
 function MouvementsPage() {
   const navigate = useNavigate();
 
@@ -11,8 +16,7 @@ function MouvementsPage() {
   const [utilisateurs, setUtilisateurs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Clés de formulaire d'origine conservées à 100%
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(aujourdhui());
   const [type, setType] = useState('ENTREE');
   const [quantite, setQuantite] = useState('');
   const [motif, setMotif] = useState('');
@@ -43,7 +47,7 @@ function MouvementsPage() {
   }, []);
 
   const resetForm = () => {
-    setDate(new Date().toISOString().split('T')[0]);
+    setDate(aujourdhui());
     setType('ENTREE');
     setQuantite('');
     setMotif('');
@@ -57,40 +61,45 @@ function MouvementsPage() {
 
     const payload = {
       date,
-      type,
-      quantite: parseInt(quantite),
+      type: type === 'ENTREE' ? 'Entree' : 'Sortie', // valeurs acceptées par le modèle Django
+      quantite: parseInt(quantite, 10),
       motif,
       id_article: idArticle,
       id_utilisateur: idUtilisateur
     };
 
+    const afficherErreur = (err) => {
+      console.error("Erreur mouvement :", err.response?.data || err);
+      alert("Erreur lors de l'enregistrement du mouvement. Vérifiez les champs.");
+    };
+
     if (editingId) {
-      // Modification
       api.put(`mouvements/${editingId}/`, payload)
         .then(() => {
           fetchData();
           resetForm();
         })
-        .catch(console.error);
+        .catch(afficherErreur);
     } else {
-      // Ajout (soumission d'origine)
       api.post('mouvements/', payload)
-        .then((res) => {
-          setMouvements([...mouvements, res.data]);
+        .then(() => {
+          // On recharge pour récupérer aussi les noms d'article et d'utilisateur
+          fetchData();
           resetForm();
         })
-        .catch(console.error);
+        .catch(afficherErreur);
     }
   };
 
   const handleEdit = (m) => {
     setEditingId(m.id_mouvement || m.id);
-    setDate(m.date || new Date().toISOString().split('T')[0]);
-    setType(m.type || 'ENTREE');
+    setDate(m.date || aujourdhui());
+    setType(estEntree(m.type) ? 'ENTREE' : 'SORTIE');
     setQuantite(m.quantite || '');
     setMotif(m.motif || '');
     setIdArticle(m.id_article || m.article || '');
     setIdUtilisateur(m.id_utilisateur || m.utilisateur || '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = (id) => {
@@ -99,7 +108,10 @@ function MouvementsPage() {
         .then(() => {
           setMouvements(mouvements.filter((m) => (m.id_mouvement || m.id) !== id));
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error(err);
+          alert("Erreur lors de la suppression du mouvement.");
+        });
     }
   };
 
@@ -131,20 +143,20 @@ function MouvementsPage() {
             <div className="form-grid-mouvements">
               <div className="form-group-custom">
                 <label>Date</label>
-                <input 
-                  type="date" 
-                  className="form-control-custom" 
-                  value={date} 
-                  onChange={(e) => setDate(e.target.value)} 
-                  required 
+                <input
+                  type="date"
+                  className="form-control-custom"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label>Type</label>
-                <select 
-                  className="form-control-custom" 
-                  value={type} 
+                <select
+                  className="form-control-custom"
+                  value={type}
                   onChange={(e) => setType(e.target.value)}
                 >
                   <option value="ENTREE">ENTREE</option>
@@ -154,33 +166,34 @@ function MouvementsPage() {
 
               <div className="form-group-custom">
                 <label>Quantité</label>
-                <input 
-                  type="number" 
-                  className="form-control-custom" 
-                  value={quantite} 
-                  onChange={(e) => setQuantite(e.target.value)} 
+                <input
+                  type="number"
+                  min="1"
+                  className="form-control-custom"
+                  value={quantite}
+                  onChange={(e) => setQuantite(e.target.value)}
                   placeholder="Quantité"
-                  required 
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label>Motif</label>
-                <input 
-                  type="text" 
-                  className="form-control-custom" 
-                  value={motif} 
-                  onChange={(e) => setMotif(e.target.value)} 
+                <input
+                  type="text"
+                  className="form-control-custom"
+                  value={motif}
+                  onChange={(e) => setMotif(e.target.value)}
                   placeholder="Motif"
                 />
               </div>
 
               <div className="form-group-custom">
                 <label>Article</label>
-                <select 
-                  className="form-control-custom" 
-                  value={idArticle} 
-                  onChange={(e) => setIdArticle(e.target.value)} 
+                <select
+                  className="form-control-custom"
+                  value={idArticle}
+                  onChange={(e) => setIdArticle(e.target.value)}
                   required
                 >
                   <option value="">-- Sélectionner un article --</option>
@@ -194,10 +207,10 @@ function MouvementsPage() {
 
               <div className="form-group-custom">
                 <label>Utilisateur</label>
-                <select 
-                  className="form-control-custom" 
-                  value={idUtilisateur} 
-                  onChange={(e) => setIdUtilisateur(e.target.value)} 
+                <select
+                  className="form-control-custom"
+                  value={idUtilisateur}
+                  onChange={(e) => setIdUtilisateur(e.target.value)}
                   required
                 >
                   <option value="">-- Sélectionner l'utilisateur --</option>
@@ -215,10 +228,10 @@ function MouvementsPage() {
                 {editingId ? 'Mettre à jour' : 'Enregistrer le mouvement'}
               </button>
               {editingId && (
-                <button 
-                  type="button" 
-                  className="btn-submit" 
-                  style={{ backgroundColor: '#64748b', marginLeft: '0.5rem' }} 
+                <button
+                  type="button"
+                  className="btn-submit"
+                  style={{ backgroundColor: '#64748b', marginLeft: '0.5rem' }}
                   onClick={resetForm}
                 >
                   Annuler
@@ -248,15 +261,17 @@ function MouvementsPage() {
                 <th>ID</th>
                 <th>Date</th>
                 <th>Type</th>
+                <th>Article</th>
                 <th>Quantité</th>
                 <th>Motif</th>
+                <th>Utilisateur</th>
                 <th style={{ width: '150px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="empty-state">Chargement des données...</td>
+                  <td colSpan="8" className="empty-state">Chargement des données...</td>
                 </tr>
               ) : mouvements.length > 0 ? (
                 mouvements.map((m, index) => (
@@ -264,15 +279,17 @@ function MouvementsPage() {
                     <td>{m.id_mouvement || m.id || index + 1}</td>
                     <td>{m.date}</td>
                     <td>
-                      <span style={{ 
-                        color: m.type === 'ENTREE' ? '#10b981' : '#ef4444', 
-                        fontWeight: '700' 
+                      <span style={{
+                        color: estEntree(m.type) ? '#10b981' : '#ef4444',
+                        fontWeight: '700'
                       }}>
-                        {m.type}
+                        {estEntree(m.type) ? 'ENTREE' : 'SORTIE'}
                       </span>
                     </td>
+                    <td>{m.designation_article || '-'}</td>
                     <td>{m.quantite}</td>
                     <td>{m.motif || '-'}</td>
+                    <td>{m.nom_utilisateur || '-'}</td>
                     <td>
                       <div className="action-buttons">
                         <button className="btn-edit" onClick={() => handleEdit(m)}>
@@ -287,7 +304,7 @@ function MouvementsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="empty-state">
+                  <td colSpan="8" className="empty-state">
                     Aucun mouvement enregistré.
                   </td>
                 </tr>

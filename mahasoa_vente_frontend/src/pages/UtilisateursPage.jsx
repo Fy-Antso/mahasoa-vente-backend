@@ -3,59 +3,93 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import './Utilisateurs.css';
 
+const ROLES = ['administrateur', 'magasinier'];
+
+function lireUtilisateurConnecte() {
+  try {
+    return JSON.parse(localStorage.getItem('user')) || {};
+  } catch {
+    return {};
+  }
+}
+
+// Transforme une réponse d'erreur DRF en message lisible
+function messageErreur(err, defaut) {
+  const data = err.response?.data;
+  if (!data) return defaut;
+  if (typeof data === 'string') return defaut;
+  const texte = Object.entries(data)
+    .map(([champ, msgs]) => `${champ} : ${[].concat(msgs).join(' ')}`)
+    .join('\n');
+  return texte || defaut;
+}
+
 function UtilisateursPage() {
   const navigate = useNavigate();
+  const connecte = lireUtilisateurConnecte();
 
   const [utilisateurs, setUtilisateurs] = useState([]);
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('vendeur');
+  const [role, setRole] = useState('magasinier');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
 
   const fetchUtilisateurs = () => {
     api.get('utilisateurs/')
-      .then((res) => { 
-        setUtilisateurs(res.data); 
-        setLoading(false); 
+      .then((res) => {
+        setUtilisateurs(res.data);
+        setLoading(false);
       })
-      .catch((err) => { 
-        console.error(err); 
-        setLoading(false); 
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
       });
   };
 
-  useEffect(() => { 
-    fetchUtilisateurs(); 
+  useEffect(() => {
+    fetchUtilisateurs();
   }, []);
 
   const resetForm = () => {
     setNom('');
     setEmail('');
-    setRole('vendeur');
+    setRole('magasinier');
+    setPassword('');
     setEditingId(null);
   };
 
   const handleAdd = (e) => {
     e.preventDefault();
+
+    if (!editingId && !password) {
+      alert('Le mot de passe est obligatoire pour un nouvel utilisateur.');
+      return;
+    }
+
     const payload = { nom, email, role };
+    if (password) payload.password = password;
+
+    const afficherErreur = (err) => {
+      console.error(err.response?.data || err);
+      alert(messageErreur(err, "Erreur lors de l'enregistrement de l'utilisateur."));
+    };
 
     if (editingId) {
-      // Modification (PUT)
       api.put(`utilisateurs/${editingId}/`, payload)
         .then(() => {
           fetchUtilisateurs();
           resetForm();
         })
-        .catch(console.error);
+        .catch(afficherErreur);
     } else {
-      // Ajout (POST) - Logique d'origine préservée
       api.post('utilisateurs/', payload)
-        .then((res) => {
-          setUtilisateurs([...utilisateurs, res.data]);
+        .then(() => {
+          fetchUtilisateurs();
           resetForm();
         })
-        .catch(console.error);
+        .catch(afficherErreur);
     }
   };
 
@@ -63,18 +97,30 @@ function UtilisateursPage() {
     setEditingId(u.id_utilisateur || u.id);
     setNom(u.nom || '');
     setEmail(u.email || '');
-    setRole(u.role || 'vendeur');
+    setRole(u.role || 'magasinier');
+    setPassword('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = (id) => {
+    if (connecte.id && String(connecte.id) === String(id)) {
+      alert('Vous ne pouvez pas supprimer le compte avec lequel vous êtes connecté.');
+      return;
+    }
     if (window.confirm("Voulez-vous vraiment supprimer cet utilisateur ?")) {
       api.delete(`utilisateurs/${id}/`)
         .then(() => {
           setUtilisateurs(utilisateurs.filter((u) => (u.id_utilisateur || u.id) !== id));
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error(err);
+          alert("Erreur lors de la suppression (cet utilisateur a peut-être des mouvements enregistrés).");
+        });
     }
   };
+
+  // Garde un rôle existant hors liste sélectionnable (ex. « vendeur »)
+  const rolesDisponibles = ROLES.includes(role) ? ROLES : [...ROLES, role];
 
   return (
     <div className="utilisateurs-container">
@@ -104,34 +150,53 @@ function UtilisateursPage() {
             <div className="form-grid-utilisateurs">
               <div className="form-group-custom">
                 <label className="form-label">Nom</label>
-                <input 
-                  type="text" 
-                  className="form-control-custom" 
-                  value={nom} 
-                  onChange={(e) => setNom(e.target.value)} 
-                  required 
+                <input
+                  type="text"
+                  className="form-control-custom"
+                  value={nom}
+                  onChange={(e) => setNom(e.target.value)}
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label className="form-label">Email</label>
-                <input 
-                  type="email" 
-                  className="form-control-custom" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  required 
+                <input
+                  type="email"
+                  className="form-control-custom"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label className="form-label">Rôle</label>
-                <input 
-                  type="text" 
-                  className="form-control-custom" 
-                  value={role} 
-                  onChange={(e) => setRole(e.target.value)} 
-                  required 
+                <select
+                  className="form-control-custom"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  required
+                >
+                  {rolesDisponibles.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group-custom">
+                <label className="form-label">
+                  {editingId ? 'Nouveau mot de passe (facultatif)' : 'Mot de passe'}
+                </label>
+                <input
+                  type="password"
+                  className="form-control-custom"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={8}
+                  autoComplete="new-password"
+                  placeholder={editingId ? 'Laisser vide pour ne pas changer' : '8 caractères minimum'}
+                  required={!editingId}
                 />
               </div>
             </div>
@@ -141,10 +206,10 @@ function UtilisateursPage() {
                 {editingId ? 'Mettre à jour' : 'Enregistrer'}
               </button>
               {editingId && (
-                <button 
-                  type="button" 
-                  className="btn-submit" 
-                  style={{ backgroundColor: '#64748b', marginLeft: '0.5rem' }} 
+                <button
+                  type="button"
+                  className="btn-submit"
+                  style={{ backgroundColor: '#64748b', marginLeft: '0.5rem' }}
                   onClick={resetForm}
                 >
                   Annuler
