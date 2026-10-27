@@ -167,3 +167,40 @@
 
   .modal-container { padding: 1.4rem 1.1rem; }
 }
+
+/* ===== Tableau de bord admin : verrouille le comportement tiroir ===== */
+.dashboard-layout .sidebar-overlay,
+.dashboard-layout .sidebar-close,
+.dashboard-layout .btn-icon-menu { display: none; }
+
+@media (max-width: 991px) {
+  .dashboard-layout .sidebar {
+    position: fixed !important;
+    top: 0; left: 0; bottom: 0;
+    width: 270px !important;
+    min-width: 0 !important;
+    max-width: 85vw;
+    height: auto !important;
+    min-height: 0 !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
+  }
+  .dashboard-layout .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 8px 0 30px rgba(0,0,0,0.3);
+  }
+  .dashboard-layout .sidebar-overlay {
+    display: block; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 999;
+  }
+  .dashboard-layout .sidebar-close {
+    display: flex; align-self: flex-end; align-items: center; justify-content: center;
+    width: 36px; height: 36px; margin-bottom: 0.5rem;
+    background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 50%;
+    font-size: 1.1rem; cursor: pointer;
+  }
+  .dashboard-layout .btn-icon-menu { display: flex; }
+  .dashboard-layout .main-wrapper { width: 100%; }
+}
