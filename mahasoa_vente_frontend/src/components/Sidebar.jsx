@@ -25,6 +25,7 @@ function Sidebar() {
         { path: '/mouvements', label: '🔄 Mouvements Stock' },
         { path: '/fournisseurs', label: '🚚 Fournisseurs' },
         { path: '/utilisateurs', label: '👥 Utilisateurs' },
+        { path: '/admin/a-propos', label: 'ℹ️ À propos' },
       ];
 
   const handleLogout = () => {
