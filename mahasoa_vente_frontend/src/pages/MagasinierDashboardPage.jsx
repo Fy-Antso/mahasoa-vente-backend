@@ -15,6 +15,7 @@ function MagasinierDashboardPage() {
     sortiesMois: 0
   });
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // État pour afficher ou masquer la boîte de dialogue modale de déconnexion
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -57,11 +58,16 @@ function MagasinierDashboardPage() {
 
   return (
     <div className="magasinier-layout">
-      
-      {/* 1. SIDEBAR (Harmonisée avec l'Administrateur) */}
       <aside className="sidebar">
-        
-        {/* En-tête : Logo épuré sans cadre + Titre + Rôle */}
+        <div className="magasinier-layout">
+          {menuOpen && <div className="sidebar-overlay" onClick={() => setMenuOpen(false)} />}
+        </div>
+      </aside>
+
+  <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
+    <button type="button" className="sidebar-close" onClick={() => setMenuOpen(false)} aria-label="Fermer le menu">✕</button>
+    ...
+    <ul className="sidebar-menu" onClick={() => setMenuOpen(false)}></ul>
         <div className="sidebar-brand">
           <img 
             src={logoMahasoa} 
@@ -108,6 +114,7 @@ function MagasinierDashboardPage() {
         
         {/* NAVBAR (Blanc #FFFFFF - Infos de l'utilisateur) */}
         <header className="navbar-top">
+          <button type="button" className="btn-icon-menu" onClick={() => setMenuOpen(true)} aria-label="Ouvrir le menu">☰</button>
           <div className="navbar-user-info">
             <div className="user-avatar">M</div>
             <div className="user-details">

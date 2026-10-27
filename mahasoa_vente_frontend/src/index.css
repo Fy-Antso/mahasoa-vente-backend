@@ -1,16 +1,9 @@
 :root {
-  --text: #1f2937;
-  --text-h: #043327;
-  --border: #e5e5e0;
-  --vert: #063C2F;
-  --or: #C9A227;
-  --fond: #F7F6F1;
-
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color: var(--text);
-  background: var(--fond);
+  color: #1f2937;
+  background: #F4F4F3;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
 }
@@ -23,27 +16,6 @@ body {
   overflow-x: hidden;
 }
 
-#root {
-  min-height: 100vh;
-}
-
-h1, h2, h3 {
-  color: var(--text-h);
-  font-weight: 600;
-  margin-top: 0;
-}
-h1 { font-size: 1.8rem; margin-bottom: 16px; }
-h2 { font-size: 1.3rem; margin-bottom: 12px; }
-h3 { font-size: 1.1rem; }
-
-p { margin: 0; }
+#root { min-height: 100vh; }
 
 img { max-width: 100%; height: auto; }
-
-@media (max-width: 991px) {
-  h1 { font-size: 1.5rem; }
-  h2 { font-size: 1.2rem; }
-}
-@media (max-width: 600px) {
-  h1 { font-size: 1.3rem; }
-}

@@ -183,38 +183,11 @@
   }
 }
 
-input:not([type="checkbox"]):not([type="radio"]),
-select,
-textarea,
-.form-control-custom {
-  color: #043327 !important;
-  background-color: #ffffff !important;
-  -webkit-text-fill-color: #043327 !important;
-  caret-color: #043327 !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  transform: none !important;
-  transition: none !important;
-  animation: none !important;
-  filter: none !important;
-  backdrop-filter: none !important;
-  font-family: Arial, Helvetica, sans-serif !important;
-  font-size: 16px !important;
-  letter-spacing: normal !important;
-  text-indent: 0px !important;
-  max-width: 100%;
-}
-
-input:focus,
-select:focus,
-textarea:focus,
-.form-control-custom:focus {
-  outline: 2px solid #043327 !important;
-  outline-offset: -1px;
-  -webkit-text-fill-color: #043327 !important;
-  color: #043327 !important;
-  caret-color: #043327 !important;
+@media (max-width: 991px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  .form-control-custom {
+    font-size: 16px !important;
+  }
 }

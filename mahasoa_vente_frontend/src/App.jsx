@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import LoginPage from './pages/LoginPage';
-import AdminLayout from './Layouts/AdminLayout';
 
 import DashboardPage from './pages/DashboardPage';
 import ArticlesPage from './pages/ArticlesPage';
@@ -15,40 +14,53 @@ import MagasinierArticlesPage from './pages/MagasinierArticlesPage';
 import MagasinierMouvementsPage from './pages/MagasinierMouvementsPage';
 import MagasinierFournisseursPage from './pages/MagasinierFournisseursPage';
 
-const ProtectedRoute = ({ children }) => {
-  const user = localStorage.getItem('user');
-  if (!user) {
+import './Responsive.css'; // toujours en dernier : il doit l'emporter sur les CSS des pages
+
+function lireRole() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    return user ? String(user.role || '').toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
+// Page réservée aux rôles autorisés ; sinon redirection vers l'espace adapté
+const ProtectedRoute = ({ children, roles }) => {
+  const role = lireRole();
+
+  if (role === null) {
     return <Navigate to="/login" replace />;
   }
+
+  if (roles && !roles.includes(role)) {
+    return <Navigate to={role === 'magasinier' ? '/magasinier' : '/'} replace />;
+  }
+
   return children;
 };
+
+const ADMIN = ['administrateur', 'admin'];
+const MAGASINIER = ['magasinier'];
 
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Espace administrateur : un seul layout responsive */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/articles" element={<ArticlesPage />} />
-        <Route path="/categories" element={<CategoriesPage />} />
-        <Route path="/mouvements" element={<MouvementsPage />} />
-        <Route path="/fournisseurs" element={<FournisseursPage />} />
-        <Route path="/utilisateurs" element={<UtilisateursPage />} />
-      </Route>
+      {/* Espace administrateur */}
+      <Route path="/" element={<ProtectedRoute roles={ADMIN}><DashboardPage /></ProtectedRoute>} />
+      <Route path="/articles" element={<ProtectedRoute roles={ADMIN}><ArticlesPage /></ProtectedRoute>} />
+      <Route path="/categories" element={<ProtectedRoute roles={ADMIN}><CategoriesPage /></ProtectedRoute>} />
+      <Route path="/mouvements" element={<ProtectedRoute roles={ADMIN}><MouvementsPage /></ProtectedRoute>} />
+      <Route path="/fournisseurs" element={<ProtectedRoute roles={ADMIN}><FournisseursPage /></ProtectedRoute>} />
+      <Route path="/utilisateurs" element={<ProtectedRoute roles={ADMIN}><UtilisateursPage /></ProtectedRoute>} />
 
       {/* Espace magasinier */}
-      <Route path="/magasinier" element={<ProtectedRoute><MagasinierDashboardPage /></ProtectedRoute>} />
-      <Route path="/magasinier/articles" element={<ProtectedRoute><MagasinierArticlesPage /></ProtectedRoute>} />
-      <Route path="/magasinier/mouvements" element={<ProtectedRoute><MagasinierMouvementsPage /></ProtectedRoute>} />
-      <Route path="/magasinier/fournisseurs" element={<ProtectedRoute><MagasinierFournisseursPage /></ProtectedRoute>} />
+      <Route path="/magasinier" element={<ProtectedRoute roles={MAGASINIER}><MagasinierDashboardPage /></ProtectedRoute>} />
+      <Route path="/magasinier/articles" element={<ProtectedRoute roles={MAGASINIER}><MagasinierArticlesPage /></ProtectedRoute>} />
+      <Route path="/magasinier/mouvements" element={<ProtectedRoute roles={MAGASINIER}><MagasinierMouvementsPage /></ProtectedRoute>} />
+      <Route path="/magasinier/fournisseurs" element={<ProtectedRoute roles={MAGASINIER}><MagasinierFournisseursPage /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

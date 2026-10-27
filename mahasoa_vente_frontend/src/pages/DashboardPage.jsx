@@ -4,18 +4,28 @@ import api from '../api/axios';
 import logo from '../assets/logo.png';
 import './Dashboard.css';
 
+function lireUtilisateur() {
+  try {
+    return JSON.parse(localStorage.getItem('user')) || {};
+  } catch {
+    return {};
+  }
+}
+
 function DashboardPage() {
   const [articles, setArticles] = useState([]);
   const [mouvements, setMouvements] = useState([]);
   const [fournisseurs, setFournisseurs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
 
-  const storedUser = JSON.parse(localStorage.getItem('user')) || { username: 'Administrateur', role: 'ADMINISTRATEUR' };
+  const storedUser = lireUtilisateur();
+  const displayName = storedUser.nom || storedUser.username || 'Administrateur';
+  const displayRole = storedUser.role || 'ADMINISTRATEUR';
 
   useEffect(() => {
-    // Récupération des données réelles de la base via l'API
     Promise.all([
       api.get('articles/').catch(() => ({ data: [] })),
       api.get('mouvements/').catch(() => ({ data: [] })),
@@ -33,7 +43,14 @@ function DashboardPage() {
       });
   }, []);
 
+  // Bloque le défilement de la page quand le tiroir est ouvert
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
+
   const handleLogout = () => {
+    setMenuOpen(false);
     setShowLogoutModal(true);
   };
 
@@ -44,26 +61,27 @@ function DashboardPage() {
     navigate('/login');
   };
 
-  // Calculs dynamiques basés sur les données réelles (0 si vide)
   const totalProduits = articles.length;
-  
-  // Calcul des stocks faibles (articles dont la quantité est inférieure ou égale au seuil minimum)
-  const stocksFaibles = articles.filter(a => Number(a.quantite) <= Number(a.seuil_minimum)).length;
-  
+  const articlesFaibles = articles.filter(a => Number(a.quantite) <= Number(a.seuil_minimum));
+  const stocksFaibles = articlesFaibles.length;
   const totalFournisseurs = fournisseurs.length;
 
   return (
     <div className="dashboard-layout">
-      {/* SIDEBAR VERTE À GAUCHE */}
-      <aside className="sidebar">
+      {menuOpen && <div className="sidebar-overlay" onClick={() => setMenuOpen(false)} />}
+
+      {/* SIDEBAR VERTE (tiroir sur tablette et mobile) */}
+      <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
+        <button type="button" className="sidebar-close" onClick={() => setMenuOpen(false)} aria-label="Fermer le menu">✕</button>
+
         <div className="sidebar-brand">
           <img src={logo} alt="Logo" className="brand-logo" />
           <h2 className="brand-title">MAHASOA VENTE</h2>
-          <span className="brand-role">{storedUser.role}</span>
+          <span className="brand-role">{displayRole}</span>
         </div>
 
-        <nav className="sidebar-menu">
-          <NavLink to="/dashboard" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+        <nav className="sidebar-menu" onClick={() => setMenuOpen(false)}>
+          <NavLink to="/" end className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
             <span>Tableau de Bord</span>
           </NavLink>
@@ -105,7 +123,7 @@ function DashboardPage() {
       {/* ZONE PRINCIPALE À DROITE */}
       <div className="main-wrapper">
         <header className="top-navbar">
-          <button className="btn-icon-menu">
+          <button type="button" className="btn-icon-menu" onClick={() => setMenuOpen(true)} aria-label="Ouvrir le menu">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#043327" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
 
@@ -116,8 +134,8 @@ function DashboardPage() {
             </div>
 
             <div className="user-profile">
-              <div className="avatar-circle">A</div>
-              <span className="user-name">{storedUser.username}</span>
+              <div className="avatar-circle">{displayName.charAt(0).toUpperCase()}</div>
+              <span className="user-name">{displayName}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
           </div>
@@ -131,11 +149,11 @@ function DashboardPage() {
             </div>
             <div>
               <h1>Tableau de bord</h1>
-              <p>Bienvenue, <strong>{storedUser.username}</strong> ! Voici un aperçu de votre activité.</p>
+              <p>Bienvenue, <strong>{displayName}</strong> ! Voici un aperçu de votre activité.</p>
             </div>
           </div>
 
-          {/* 4 CARTES KPI DYNAMIQUES */}
+          {/* 4 CARTES KPI */}
           <div className="kpi-grid">
             <div className="kpi-card">
               <div className="kpi-icon-bg">
@@ -166,7 +184,7 @@ function DashboardPage() {
               <div className="kpi-info">
                 <span className="kpi-title">Stocks Faibles</span>
                 <div className="kpi-value warning">{stocksFaibles}</div>
-                <span className="kpi-sub gray">À jour</span>
+                <span className="kpi-sub gray">{stocksFaibles > 0 ? 'À réapprovisionner' : 'À jour'}</span>
               </div>
             </div>
 
@@ -222,7 +240,7 @@ function DashboardPage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#043327" strokeWidth="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                   <h2>Mouvements récents</h2>
                 </div>
-                <button className="btn-text">Voir tout</button>
+                <button type="button" className="btn-text" onClick={() => navigate('/mouvements')}>Voir tout</button>
               </div>
               <table className="custom-table">
                 <thead>
@@ -237,12 +255,12 @@ function DashboardPage() {
                 <tbody>
                   {mouvements.length > 0 ? (
                     mouvements.slice(0, 3).map((m, index) => (
-                      <tr key={index}>
+                      <tr key={m.id_mouvement || index}>
                         <td>{m.date || '—'}</td>
                         <td><span className={`badge ${m.type === 'Entree' ? 'badge-in' : 'badge-out'}`}>{m.type || '—'}</span></td>
-                        <td>{m.produit || '—'}</td>
+                        <td>{m.designation_article || m.produit || '—'}</td>
                         <td className={m.type === 'Entree' ? 'text-green' : 'text-red'}>{m.quantite}</td>
-                        <td>{m.utilisateur || '—'}</td>
+                        <td>{m.nom_utilisateur || m.utilisateur || '—'}</td>
                       </tr>
                     ))
                   ) : (
@@ -262,17 +280,17 @@ function DashboardPage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C9A227" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                   <h2>Alertes de stock</h2>
                 </div>
-                <button className="btn-text">Voir tout</button>
+                <button type="button" className="btn-text" onClick={() => navigate('/articles')}>Voir tout</button>
               </div>
               <div className="alerts-list">
-                {articles.filter(a => Number(a.quantite) <= Number(a.seuil_minimum)).length > 0 ? (
-                  articles.filter(a => Number(a.quantite) <= Number(a.seuil_minimum)).slice(0, 3).map((a, index) => (
-                    <div className="alert-item" key={index}>
+                {articlesFaibles.length > 0 ? (
+                  articlesFaibles.slice(0, 3).map((a, index) => (
+                    <div className="alert-item" key={a.id_article || index}>
                       <div className="alert-left">
                         <span className="alert-name">{a.designation}</span>
                       </div>
                       <span className="alert-stock">Stock actuel : {a.quantite}</span>
-                      <button className="btn-outline-sm">Voir</button>
+                      <button type="button" className="btn-outline-sm" onClick={() => navigate('/articles')}>Voir</button>
                     </div>
                   ))
                 ) : (
@@ -286,11 +304,11 @@ function DashboardPage() {
         </main>
 
         <footer className="footer-copyright">
-          © 2025 Mahasoa Vente. Tous droits réservés.
+          © {new Date().getFullYear()} Mahasoa Vente. Tous droits réservés.
         </footer>
       </div>
 
-      {/* MODALE DE CONFIRMATION DE DÉCONNEXION CENTRÉE */}
+      {/* MODALE DE CONFIRMATION DE DÉCONNEXION */}
       {showLogoutModal && (
         <div className="modal-overlay">
           <div className="modal-card">
