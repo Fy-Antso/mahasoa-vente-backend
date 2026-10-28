@@ -8,7 +8,6 @@ import CategoriesPage from './pages/CategoriesPage';
 import MouvementsPage from './pages/MouvementsPage';
 import FournisseursPage from './pages/FournisseursPage';
 import UtilisateursPage from './pages/UtilisateursPage';
-import APropos from './pages/APropos';
 
 import MagasinierDashboardPage from './pages/MagasinierDashboardPage';
 import MagasinierArticlesPage from './pages/MagasinierArticlesPage';
