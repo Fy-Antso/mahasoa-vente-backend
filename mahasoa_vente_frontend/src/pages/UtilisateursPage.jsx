@@ -1,32 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../api/axios'; // Import de votre instance Axios préconfigurée
+import API from '../api/axios';
+import { messageErreur } from '../utils/erreurs';
 import './Utilisateurs.css';
+
+const MIN_PASSWORD = 8;
+const FORM_VIDE = { nom: '', email: '', role: 'vendeur', password: '' };
 
 export default function UtilisateursPage() {
   const navigate = useNavigate();
   const [utilisateurs, setUtilisateurs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  // État du formulaire
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    role: 'vendeur',
-    password: 'Password123!' // Mot de passe par défaut pour la création rapide
-  });
+  const [formData, setFormData] = useState(FORM_VIDE);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. Charger la liste des utilisateurs au chargement du composant
   const fetchUtilisateurs = async () => {
     try {
       setLoading(true);
-      const response = await API.get('/users/'); // Ajustez l'URL API si nécessaire (ex: /api/users/)
-      setUtilisateurs(response.data);
+      const response = await API.get('utilisateurs/');
+      setUtilisateurs(Array.isArray(response.data) ? response.data : []);
       setError('');
     } catch (err) {
-      console.error("Erreur lors de la récupération des utilisateurs:", err);
+      console.error("Erreur lors de la récupération des utilisateurs:", err.response?.data || err);
       setError("Impossible de charger la liste des utilisateurs.");
     } finally {
       setLoading(false);
@@ -37,41 +33,37 @@ export default function UtilisateursPage() {
     fetchUtilisateurs();
   }, []);
 
-  // 2. Gérer le changement dans les champs du formulaire
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 3. Soumettre le formulaire pour créer un utilisateur
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.username || !formData.email) {
+
+    if (!formData.nom.trim() || !formData.email.trim()) {
       alert("Veuillez remplir le nom et l'adresse e-mail.");
+      return;
+    }
+    if (formData.password.length < MIN_PASSWORD) {
+      alert(`Le mot de passe doit contenir au moins ${MIN_PASSWORD} caractères.`);
       return;
     }
 
     try {
       setIsSubmitting(true);
-      // Envoi de la requête POST au backend Django
-      await API.post('/users/', formData);
-      
-      // Réinitialiser le formulaire
-      setFormData({
-        username: '',
-        email: '',
-        role: 'vendeur',
-        password: 'Password123!'
+      await API.post('utilisateurs/', {
+        nom: formData.nom.trim(),
+        email: formData.email.trim(),
+        role: formData.role,
+        password: formData.password,
       });
 
-      // Rafraîchir la liste immédiatement
+      setFormData(FORM_VIDE);
       await fetchUtilisateurs();
       alert("Utilisateur créé avec succès !");
     } catch (err) {
-      console.error("Erreur lors de la création de l'utilisateur:", err);
-      alert("Erreur lors de l'enregistrement de l'utilisateur. Vérifiez les informations.");
+      console.error("Erreur lors de la création de l'utilisateur:", err.response?.data || err);
+      alert("Erreur lors de l'enregistrement :\n" + messageErreur(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -79,9 +71,8 @@ export default function UtilisateursPage() {
 
   return (
     <div className="container-fluid p-4" style={{ backgroundColor: '#F7F6F1', minHeight: '100vh' }}>
-      {/* Bouton de retour */}
-      <button 
-        onClick={() => navigate('/')} 
+      <button
+        onClick={() => navigate('/')}
         className="btn btn-outline-secondary mb-3 bg-white"
       >
         ← Retour au tableau de bord
@@ -91,7 +82,6 @@ export default function UtilisateursPage() {
         👥 Gestion des Utilisateurs
       </h2>
 
-      {/* Carte Formulaire de création */}
       <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '8px', overflow: 'hidden' }}>
         <div className="card-header text-white p-3" style={{ backgroundColor: '#063C2F' }}>
           <h5 className="mb-0 fw-bold">+ Créer un utilisateur</h5>
@@ -99,20 +89,20 @@ export default function UtilisateursPage() {
         <div className="card-body p-4 bg-white">
           <form onSubmit={handleSubmit}>
             <div className="row g-3">
-              <div className="col-md-4">
+              <div className="col-md-3">
                 <label className="form-label fw-semibold text-dark">Nom</label>
                 <input
                   type="text"
-                  name="username"
+                  name="nom"
                   className="form-control"
                   placeholder="ex: rindraniaina"
-                  value={formData.username}
+                  value={formData.nom}
                   onChange={handleChange}
                   required
                 />
               </div>
 
-              <div className="col-md-4">
+              <div className="col-md-3">
                 <label className="form-label fw-semibold text-dark">E-mail</label>
                 <input
                   type="email"
@@ -125,7 +115,7 @@ export default function UtilisateursPage() {
                 />
               </div>
 
-              <div className="col-md-4">
+              <div className="col-md-3">
                 <label className="form-label fw-semibold text-dark">Rôle</label>
                 <select
                   name="role"
@@ -138,9 +128,23 @@ export default function UtilisateursPage() {
                   <option value="administrateur">administrateur</option>
                 </select>
               </div>
+
+              <div className="col-md-3">
+                <label className="form-label fw-semibold text-dark">Mot de passe</label>
+                <input
+                  type="password"
+                  name="password"
+                  className="form-control"
+                  placeholder={`${MIN_PASSWORD} caractères minimum`}
+                  value={formData.password}
+                  onChange={handleChange}
+                  minLength={MIN_PASSWORD}
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
             </div>
 
-            {/* Bouton de soumission corrigé */}
             <div className="d-flex justify-content-end mt-3">
               <button
                 type="submit"
@@ -155,7 +159,6 @@ export default function UtilisateursPage() {
         </div>
       </div>
 
-      {/* Carte Liste des utilisateurs */}
       <div className="card border-0 shadow-sm" style={{ borderRadius: '8px', overflow: 'hidden' }}>
         <div className="card-header bg-white p-3 border-bottom">
           <h5 className="mb-0 fw-bold" style={{ color: '#063C2F' }}>
@@ -194,23 +197,26 @@ export default function UtilisateursPage() {
                     </td>
                   </tr>
                 ) : (
-                  utilisateurs.map((u) => (
-                    <tr key={u.id || u.username}>
-                      <td className="px-3 fw-bold">#{u.id}</td>
-                      <td className="px-3">{u.username || u.nom}</td>
-                      <td className="px-3">{u.email}</td>
-                      <td className="px-3">
-                        <span className="badge bg-secondary text-capitalize">
-                          {u.role || 'utilisateur'}
-                        </span>
-                      </td>
-                      <td className="px-3">
-                        <button className="btn btn-sm btn-outline-danger">
-                          Supprimer
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  utilisateurs.map((u) => {
+                    const uid = u.id_utilisateur || u.id;
+                    return (
+                      <tr key={uid || u.email}>
+                        <td className="px-3 fw-bold">#{uid}</td>
+                        <td className="px-3">{u.nom}</td>
+                        <td className="px-3">{u.email}</td>
+                        <td className="px-3">
+                          <span className="badge bg-secondary text-capitalize">
+                            {u.role || 'utilisateur'}
+                          </span>
+                        </td>
+                        <td className="px-3">
+                          <button className="btn btn-sm btn-outline-danger">
+                            Supprimer
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

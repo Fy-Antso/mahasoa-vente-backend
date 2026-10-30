@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { messageErreur } from '../utils/erreurs';
 import './Categories.css';
 
 function CategoriesPage() {
@@ -9,16 +10,19 @@ function CategoriesPage() {
   const [nom, setNom] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [erreurChargement, setErreurChargement] = useState('');
 
   const fetchCategories = () => {
     setLoading(true);
     api.get('categories/')
       .then((res) => {
-        setCategories(res.data || []);
+        setCategories(Array.isArray(res.data) ? res.data : []);
+        setErreurChargement('');
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Erreur chargement :", err);
+        console.error("Erreur chargement :", err.response?.data || err);
+        setErreurChargement("Impossible de charger les catégories : " + messageErreur(err));
         setLoading(false);
       });
   };
@@ -34,8 +38,8 @@ function CategoriesPage() {
       return;
     }
 
-    // On envoie un objet contenant les deux variantes possibles pour s'adapter au serializer Django
-    const payload = { nom: nom, nom_categorie: nom };
+    // On envoie les deux variantes possibles pour s'adapter au serializer Django
+    const payload = { nom: nom.trim(), nom_categorie: nom.trim() };
 
     if (editingId) {
       api.put(`categories/${editingId}/`, payload)
@@ -46,7 +50,7 @@ function CategoriesPage() {
         })
         .catch((err) => {
           console.error("Erreur modification :", err.response?.data || err);
-          alert("Erreur lors de la modification : " + JSON.stringify(err.response?.data || err));
+          alert("Erreur lors de la modification :\n" + messageErreur(err));
         });
     } else {
       api.post('categories/', payload)
@@ -56,14 +60,14 @@ function CategoriesPage() {
         })
         .catch((err) => {
           console.error("Erreur ajout :", err.response?.data || err);
-          alert("Erreur lors de l'ajout : " + JSON.stringify(err.response?.data || err));
+          alert("Erreur lors de l'ajout :\n" + messageErreur(err));
         });
     }
   };
 
   const handleEdit = (cat) => {
     setEditingId(cat.id || cat.id_categorie);
-    setNom(cat.nom || cat.nom_categorie);
+    setNom(cat.nom || cat.nom_categorie || '');
   };
 
   const handleDelete = (id) => {
@@ -74,7 +78,7 @@ function CategoriesPage() {
         })
         .catch((err) => {
           console.error("Erreur suppression :", err.response?.data || err);
-          alert("Erreur lors de la suppression.");
+          alert("Suppression impossible :\n" + messageErreur(err));
         });
     }
   };
@@ -98,27 +102,26 @@ function CategoriesPage() {
           <span>{editingId ? '✏️ Modifier la catégorie' : '➕ Ajouter une nouvelle catégorie'}</span>
         </div>
         <div className="card-body-custom">
-          {/* onSubmit gère obligatoirement le clic sur le bouton Ajouter */}
           <form onSubmit={handleSubmit} className="form-inline-custom">
             <div className="form-group-custom">
               <label>Nom de la catégorie</label>
-              <input 
-                type="text" 
-                className="form-control-custom" 
-                placeholder="Ex: Accessoires Cuisine" 
-                value={nom} 
-                onChange={(e) => setNom(e.target.value)} 
-                required 
+              <input
+                type="text"
+                className="form-control-custom"
+                placeholder="Ex: Accessoires Cuisine"
+                value={nom}
+                onChange={(e) => setNom(e.target.value)}
+                required
               />
             </div>
             <button type="submit" className="btn-submit">
               {editingId ? 'Mettre à jour' : 'Ajouter'}
             </button>
             {editingId && (
-              <button 
-                type="button" 
-                className="btn-submit" 
-                style={{ backgroundColor: '#64748b' }} 
+              <button
+                type="button"
+                className="btn-submit"
+                style={{ backgroundColor: '#64748b' }}
                 onClick={() => { setEditingId(null); setNom(''); }}
               >
                 Annuler
@@ -152,6 +155,12 @@ function CategoriesPage() {
               {loading ? (
                 <tr>
                   <td colSpan="3" className="empty-state">Chargement des catégories...</td>
+                </tr>
+              ) : erreurChargement ? (
+                <tr>
+                  <td colSpan="3" className="empty-state" style={{ color: '#dc2626' }}>
+                    {erreurChargement}
+                  </td>
                 </tr>
               ) : categories.length > 0 ? (
                 categories.map((cat, index) => {

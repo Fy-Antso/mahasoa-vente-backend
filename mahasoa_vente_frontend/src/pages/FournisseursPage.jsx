@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { messageErreur } from '../utils/erreurs';
 import './Fournisseurs.css';
 
 function FournisseursPage() {
@@ -11,22 +12,25 @@ function FournisseursPage() {
   const [contact, setContact] = useState('');
   const [telephone, setTelephone] = useState('');
   const [loading, setLoading] = useState(true);
+  const [erreurChargement, setErreurChargement] = useState('');
   const [editingId, setEditingId] = useState(null);
 
   const fetchFournisseurs = () => {
     api.get('fournisseurs/')
-      .then((res) => { 
-        setFournisseurs(res.data); 
-        setLoading(false); 
+      .then((res) => {
+        setFournisseurs(Array.isArray(res.data) ? res.data : []);
+        setErreurChargement('');
+        setLoading(false);
       })
-      .catch((err) => { 
-        console.error(err); 
-        setLoading(false); 
+      .catch((err) => {
+        console.error("Erreur chargement fournisseurs :", err.response?.data || err);
+        setErreurChargement("Impossible de charger les fournisseurs : " + messageErreur(err));
+        setLoading(false);
       });
   };
 
-  useEffect(() => { 
-    fetchFournisseurs(); 
+  useEffect(() => {
+    fetchFournisseurs();
   }, []);
 
   const resetForm = () => {
@@ -34,6 +38,11 @@ function FournisseursPage() {
     setContact('');
     setTelephone('');
     setEditingId(null);
+  };
+
+  const afficherErreur = (err) => {
+    console.error("Erreur fournisseur :", err.response?.data || err);
+    alert("Erreur lors de l'enregistrement du fournisseur :\n" + messageErreur(err));
   };
 
   const handleAdd = (e) => {
@@ -47,15 +56,15 @@ function FournisseursPage() {
           fetchFournisseurs();
           resetForm();
         })
-        .catch(console.error);
+        .catch(afficherErreur);
     } else {
-      // Ajout (POST) - Logique d'origine préservée
+      // Ajout (POST)
       api.post('fournisseurs/', payload)
         .then((res) => {
           setFournisseurs([...fournisseurs, res.data]);
           resetForm();
         })
-        .catch(console.error);
+        .catch(afficherErreur);
     }
   };
 
@@ -72,7 +81,10 @@ function FournisseursPage() {
         .then(() => {
           setFournisseurs(fournisseurs.filter((f) => (f.id_fournisseur || f.id) !== id));
         })
-        .catch(console.error);
+        .catch((err) => {
+          console.error("Erreur suppression :", err.response?.data || err);
+          alert("Suppression impossible :\n" + messageErreur(err));
+        });
     }
   };
 
@@ -104,34 +116,34 @@ function FournisseursPage() {
             <div className="form-grid-fournisseurs">
               <div className="form-group-custom">
                 <label className="form-label">Nom</label>
-                <input 
-                  type="text" 
-                  className="form-control-custom" 
-                  value={nom} 
-                  onChange={(e) => setNom(e.target.value)} 
+                <input
+                  type="text"
+                  className="form-control-custom"
+                  value={nom}
+                  onChange={(e) => setNom(e.target.value)}
                   placeholder="Nom du fournisseur"
-                  required 
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label className="form-label">Contact</label>
-                <input 
-                  type="text" 
-                  className="form-control-custom" 
-                  value={contact} 
-                  onChange={(e) => setContact(e.target.value)} 
+                <input
+                  type="text"
+                  className="form-control-custom"
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
                   placeholder="Personne de contact / Email"
                 />
               </div>
 
               <div className="form-group-custom">
                 <label className="form-label">Téléphone</label>
-                <input 
-                  type="text" 
-                  className="form-control-custom" 
-                  value={telephone} 
-                  onChange={(e) => setTelephone(e.target.value)} 
+                <input
+                  type="text"
+                  className="form-control-custom"
+                  value={telephone}
+                  onChange={(e) => setTelephone(e.target.value)}
                   placeholder="Numéro de téléphone"
                 />
               </div>
@@ -142,10 +154,10 @@ function FournisseursPage() {
                 {editingId ? 'Mettre à jour' : 'Enregistrer'}
               </button>
               {editingId && (
-                <button 
-                  type="button" 
-                  className="btn-submit" 
-                  style={{ backgroundColor: '#64748b', marginLeft: '0.5rem' }} 
+                <button
+                  type="button"
+                  className="btn-submit"
+                  style={{ backgroundColor: '#64748b', marginLeft: '0.5rem' }}
                   onClick={resetForm}
                 >
                   Annuler
@@ -183,6 +195,12 @@ function FournisseursPage() {
               {loading ? (
                 <tr>
                   <td colSpan="5" className="empty-state">Chargement...</td>
+                </tr>
+              ) : erreurChargement ? (
+                <tr>
+                  <td colSpan="5" className="empty-state" style={{ color: '#dc2626' }}>
+                    {erreurChargement}
+                  </td>
                 </tr>
               ) : fournisseurs.length > 0 ? (
                 fournisseurs.map((f, index) => (
