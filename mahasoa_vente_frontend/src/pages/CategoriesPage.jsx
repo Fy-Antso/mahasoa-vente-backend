@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { messageErreur } from '../utils/erreurs';
+import BarreRecherche from '../components/BarreRecherche';
+import { correspond } from '../utils/recherche';
 import './Categories.css';
 
 function CategoriesPage() {
@@ -11,6 +13,7 @@ function CategoriesPage() {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [erreurChargement, setErreurChargement] = useState('');
+  const [recherche, setRecherche] = useState('');
 
   const fetchCategories = () => {
     setLoading(true);
@@ -83,6 +86,10 @@ function CategoriesPage() {
     }
   };
 
+  const categoriesFiltrees = categories.filter((cat) =>
+    correspond([cat.id, cat.id_categorie, cat.nom, cat.nom_categorie], recherche)
+  );
+
   return (
     <div className="categories-container">
       <button className="btn-back" onClick={() => navigate('/')}>
@@ -142,6 +149,14 @@ function CategoriesPage() {
           </div>
         </div>
 
+        <BarreRecherche
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Rechercher une catégorie..."
+          total={categories.length}
+          affiches={categoriesFiltrees.length}
+        />
+
         <div className="table-responsive-custom">
           <table className="custom-table">
             <thead>
@@ -162,8 +177,20 @@ function CategoriesPage() {
                     {erreurChargement}
                   </td>
                 </tr>
-              ) : categories.length > 0 ? (
-                categories.map((cat, index) => {
+              ) : categories.length === 0 ? (
+                <tr>
+                  <td colSpan="3" className="empty-state">
+                    Aucune catégorie enregistrée pour le moment.
+                  </td>
+                </tr>
+              ) : categoriesFiltrees.length === 0 ? (
+                <tr>
+                  <td colSpan="3" className="empty-state">
+                    Aucune catégorie ne correspond à « {recherche} ».
+                  </td>
+                </tr>
+              ) : (
+                categoriesFiltrees.map((cat, index) => {
                   const catId = cat.id || cat.id_categorie;
                   const catName = cat.nom || cat.nom_categorie;
                   return (
@@ -179,12 +206,6 @@ function CategoriesPage() {
                     </tr>
                   );
                 })
-              ) : (
-                <tr>
-                  <td colSpan="3" className="empty-state">
-                    Aucune catégorie enregistrée pour le moment.
-                  </td>
-                </tr>
               )}
             </tbody>
           </table>

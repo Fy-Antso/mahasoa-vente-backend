@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import BarreRecherche from '../components/BarreRecherche';
+import { correspond } from '../utils/recherche';
 import './Articles.css';
 
 function ArticlesPage() {
@@ -10,6 +12,7 @@ function ArticlesPage() {
   const [categories, setCategories] = useState([]);
   const [fournisseurs, setFournisseurs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [recherche, setRecherche] = useState('');
 
   // Gestion du mode édition
   const [editingId, setEditingId] = useState(null);
@@ -124,6 +127,14 @@ function ArticlesPage() {
     }
   };
 
+  // Filtrage de la recherche (n'affecte pas les données d'origine)
+  const articlesFiltres = articles.filter((a) =>
+    correspond(
+      [a.reference, a.designation, a.nom_categorie, a.nom_fournisseur, a.prix_vente, a.quantite, a.seuil_minimum],
+      recherche
+    )
+  );
+
   return (
     <div className="articles-container">
       {/* BOUTON RETOUR TABLEAU DE BORD */}
@@ -154,78 +165,78 @@ function ArticlesPage() {
             <div className="form-grid">
               <div className="form-group-custom">
                 <label>Référence</label>
-                <input 
-                  type="text" 
-                  className="form-control-custom" 
-                  value={reference} 
-                  onChange={(e) => setReference(e.target.value)} 
-                  required 
+                <input
+                  type="text"
+                  className="form-control-custom"
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label>Désignation / Nom</label>
-                <input 
-                  type="text" 
-                  className="form-control-custom" 
-                  value={designation} 
-                  onChange={(e) => setDesignation(e.target.value)} 
-                  required 
+                <input
+                  type="text"
+                  className="form-control-custom"
+                  value={designation}
+                  onChange={(e) => setDesignation(e.target.value)}
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label>Prix Achat (Ar)</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  className="form-control-custom" 
-                  value={prixAchat} 
-                  onChange={(e) => setPrixAchat(e.target.value)} 
-                  required 
+                <input
+                  type="number"
+                  step="0.01"
+                  className="form-control-custom"
+                  value={prixAchat}
+                  onChange={(e) => setPrixAchat(e.target.value)}
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label>Prix Vente (Ar)</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  className="form-control-custom" 
-                  value={prixVente} 
-                  onChange={(e) => setPrixVente(e.target.value)} 
-                  required 
+                <input
+                  type="number"
+                  step="0.01"
+                  className="form-control-custom"
+                  value={prixVente}
+                  onChange={(e) => setPrixVente(e.target.value)}
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label>Quantité initiale</label>
-                <input 
-                  type="number" 
-                  className="form-control-custom" 
-                  value={quantite} 
-                  onChange={(e) => setQuantite(e.target.value)} 
-                  required 
+                <input
+                  type="number"
+                  className="form-control-custom"
+                  value={quantite}
+                  onChange={(e) => setQuantite(e.target.value)}
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label>Seuil Minimum</label>
-                <input 
-                  type="number" 
-                  className="form-control-custom" 
-                  value={seuilMinimum} 
-                  onChange={(e) => setSeuilMinimum(e.target.value)} 
-                  required 
+                <input
+                  type="number"
+                  className="form-control-custom"
+                  value={seuilMinimum}
+                  onChange={(e) => setSeuilMinimum(e.target.value)}
+                  required
                 />
               </div>
 
               <div className="form-group-custom">
                 <label>Catégorie</label>
-                <select 
-                  className="form-control-custom" 
-                  value={idCategorie} 
-                  onChange={(e) => setIdCategorie(e.target.value)} 
+                <select
+                  className="form-control-custom"
+                  value={idCategorie}
+                  onChange={(e) => setIdCategorie(e.target.value)}
                   required
                 >
                   <option value="">-- Catégorie --</option>
@@ -239,10 +250,10 @@ function ArticlesPage() {
 
               <div className="form-group-custom">
                 <label>Fournisseur</label>
-                <select 
-                  className="form-control-custom" 
-                  value={idFournisseur} 
-                  onChange={(e) => setIdFournisseur(e.target.value)} 
+                <select
+                  className="form-control-custom"
+                  value={idFournisseur}
+                  onChange={(e) => setIdFournisseur(e.target.value)}
                   required
                 >
                   <option value="">-- Fournisseur --</option>
@@ -260,10 +271,10 @@ function ArticlesPage() {
                 {editingId ? '💾 Mettre à jour' : '💾 Enregistrer le produit'}
               </button>
               {editingId && (
-                <button 
-                  type="button" 
-                  onClick={resetForm} 
-                  className="btn-cancel" 
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="btn-cancel"
                   style={{ backgroundColor: '#6c757d', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer' }}
                 >
                   Annuler
@@ -286,6 +297,14 @@ function ArticlesPage() {
           </div>
         </div>
 
+        <BarreRecherche
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Rechercher un article (référence, nom, catégorie, fournisseur...)"
+          total={articles.length}
+          affiches={articlesFiltres.length}
+        />
+
         <div className="table-responsive-custom">
           <table className="custom-table">
             <thead>
@@ -305,8 +324,23 @@ function ArticlesPage() {
                     Chargement des données...
                   </td>
                 </tr>
-              ) : articles.length > 0 ? (
-                articles.map((a) => {
+              ) : articles.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="empty-state">
+                    <svg className="empty-icon-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <div>Aucune donnée trouvée dans la base de données.</div>
+                  </td>
+                </tr>
+              ) : articlesFiltres.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="empty-state">
+                    Aucun article ne correspond à « {recherche} ».
+                  </td>
+                </tr>
+              ) : (
+                articlesFiltres.map((a) => {
                   const articleId = a.id_article || a.id;
                   return (
                     <tr key={articleId}>
@@ -316,14 +350,14 @@ function ArticlesPage() {
                       <td>{a.quantite}</td>
                       <td>{a.seuil_minimum}</td>
                       <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        <button 
-                          onClick={() => handleEditClick(a)} 
+                        <button
+                          onClick={() => handleEditClick(a)}
                           style={{ backgroundColor: '#f0ad4e', color: '#fff', border: 'none', padding: '6px 12px', marginRight: '6px', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}
                         >
                           Modifier
                         </button>
-                        <button 
-                          onClick={() => handleDeleteClick(articleId)} 
+                        <button
+                          onClick={() => handleDeleteClick(articleId)}
                           style={{ backgroundColor: '#d9534f', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}
                         >
                           Supprimer
@@ -332,15 +366,6 @@ function ArticlesPage() {
                     </tr>
                   );
                 })
-              ) : (
-                <tr>
-                  <td colSpan="6" className="empty-state">
-                    <svg className="empty-icon-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <div>Aucune donnée trouvée dans la base de données.</div>
-                  </td>
-                </tr>
               )}
             </tbody>
           </table>

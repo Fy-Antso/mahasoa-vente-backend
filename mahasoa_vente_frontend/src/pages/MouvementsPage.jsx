@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import BarreRecherche from '../components/BarreRecherche';
+import { correspond } from '../utils/recherche';
 import './Mouvements.css';
 
 // Accepte 'Entree', 'ENTREE', 'entrée'...
@@ -15,6 +17,7 @@ function MouvementsPage() {
   const [articles, setArticles] = useState([]);
   const [utilisateurs, setUtilisateurs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [recherche, setRecherche] = useState('');
 
   const [date, setDate] = useState(aujourdhui());
   const [type, setType] = useState('ENTREE');
@@ -114,6 +117,22 @@ function MouvementsPage() {
         });
     }
   };
+
+  const mouvementsFiltres = mouvements.filter((m) =>
+    correspond(
+      [
+        m.id_mouvement,
+        m.id,
+        m.date,
+        estEntree(m.type) ? 'ENTREE' : 'SORTIE',
+        m.designation_article,
+        m.quantite,
+        m.motif,
+        m.nom_utilisateur
+      ],
+      recherche
+    )
+  );
 
   return (
     <div className="mouvements-container">
@@ -254,6 +273,14 @@ function MouvementsPage() {
           </div>
         </div>
 
+        <BarreRecherche
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Rechercher un mouvement (article, type, motif, utilisateur, date)..."
+          total={mouvements.length}
+          affiches={mouvementsFiltres.length}
+        />
+
         <div className="table-responsive-custom">
           <table className="custom-table">
             <thead>
@@ -273,8 +300,20 @@ function MouvementsPage() {
                 <tr>
                   <td colSpan="8" className="empty-state">Chargement des données...</td>
                 </tr>
-              ) : mouvements.length > 0 ? (
-                mouvements.map((m, index) => (
+              ) : mouvements.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="empty-state">
+                    Aucun mouvement enregistré.
+                  </td>
+                </tr>
+              ) : mouvementsFiltres.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="empty-state">
+                    Aucun mouvement ne correspond à « {recherche} ».
+                  </td>
+                </tr>
+              ) : (
+                mouvementsFiltres.map((m, index) => (
                   <tr key={m.id_mouvement || m.id || index}>
                     <td>{m.id_mouvement || m.id || index + 1}</td>
                     <td>{m.date}</td>
@@ -302,12 +341,6 @@ function MouvementsPage() {
                     </td>
                   </tr>
                 ))
-              ) : (
-                <tr>
-                  <td colSpan="8" className="empty-state">
-                    Aucun mouvement enregistré.
-                  </td>
-                </tr>
               )}
             </tbody>
           </table>

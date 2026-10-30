@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import { messageErreur } from '../utils/erreurs';
+import BarreRecherche from '../components/BarreRecherche';
+import { correspond } from '../utils/recherche';
 import './Utilisateurs.css';
 
 const MIN_PASSWORD = 8;
@@ -14,6 +16,7 @@ export default function UtilisateursPage() {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState(FORM_VIDE);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recherche, setRecherche] = useState('');
 
   const fetchUtilisateurs = async () => {
     try {
@@ -68,6 +71,10 @@ export default function UtilisateursPage() {
       setIsSubmitting(false);
     }
   };
+
+  const utilisateursFiltres = utilisateurs.filter((u) =>
+    correspond([u.id_utilisateur, u.id, u.nom, u.email, u.role], recherche)
+  );
 
   return (
     <div className="container-fluid p-4" style={{ backgroundColor: '#F7F6F1', minHeight: '100vh' }}>
@@ -165,6 +172,17 @@ export default function UtilisateursPage() {
             📋 Liste des utilisateurs
           </h5>
         </div>
+
+        <div className="bg-white">
+          <BarreRecherche
+            valeur={recherche}
+            onChange={setRecherche}
+            placeholder="Rechercher un utilisateur (nom, e-mail, rôle)..."
+            total={utilisateurs.length}
+            affiches={utilisateursFiltres.length}
+          />
+        </div>
+
         <div className="card-body p-0">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0">
@@ -196,8 +214,14 @@ export default function UtilisateursPage() {
                       Aucun utilisateur trouvé.
                     </td>
                   </tr>
+                ) : utilisateursFiltres.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-4 text-muted">
+                      Aucun utilisateur ne correspond à « {recherche} ».
+                    </td>
+                  </tr>
                 ) : (
-                  utilisateurs.map((u) => {
+                  utilisateursFiltres.map((u) => {
                     const uid = u.id_utilisateur || u.id;
                     return (
                       <tr key={uid || u.email}>

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { messageErreur } from '../utils/erreurs';
+import BarreRecherche from '../components/BarreRecherche';
+import { correspond } from '../utils/recherche';
 import './Fournisseurs.css';
 
 function FournisseursPage() {
@@ -14,6 +16,7 @@ function FournisseursPage() {
   const [loading, setLoading] = useState(true);
   const [erreurChargement, setErreurChargement] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [recherche, setRecherche] = useState('');
 
   const fetchFournisseurs = () => {
     api.get('fournisseurs/')
@@ -87,6 +90,10 @@ function FournisseursPage() {
         });
     }
   };
+
+  const fournisseursFiltres = fournisseurs.filter((f) =>
+    correspond([f.id_fournisseur, f.id, f.nom, f.contact, f.telephone], recherche)
+  );
 
   return (
     <div className="fournisseurs-container">
@@ -180,6 +187,14 @@ function FournisseursPage() {
           </div>
         </div>
 
+        <BarreRecherche
+          valeur={recherche}
+          onChange={setRecherche}
+          placeholder="Rechercher un fournisseur (nom, contact, téléphone)..."
+          total={fournisseurs.length}
+          affiches={fournisseursFiltres.length}
+        />
+
         <div className="table-responsive-custom">
           <table className="custom-table">
             <thead>
@@ -202,8 +217,20 @@ function FournisseursPage() {
                     {erreurChargement}
                   </td>
                 </tr>
-              ) : fournisseurs.length > 0 ? (
-                fournisseurs.map((f, index) => (
+              ) : fournisseurs.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="empty-state">
+                    Aucun fournisseur enregistré.
+                  </td>
+                </tr>
+              ) : fournisseursFiltres.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="empty-state">
+                    Aucun fournisseur ne correspond à « {recherche} ».
+                  </td>
+                </tr>
+              ) : (
+                fournisseursFiltres.map((f, index) => (
                   <tr key={f.id_fournisseur || f.id || index}>
                     <td>{f.id_fournisseur || f.id || index + 1}</td>
                     <td><strong>{f.nom}</strong></td>
@@ -221,12 +248,6 @@ function FournisseursPage() {
                     </td>
                   </tr>
                 ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="empty-state">
-                    Aucun fournisseur enregistré.
-                  </td>
-                </tr>
               )}
             </tbody>
           </table>
